@@ -16,17 +16,6 @@ struct Plane
 	float distance;// 距離
 };
 
-// 直線
-struct Line {
-	Vector3 origin;// 始点
-	Vector3 diff;// 終点への差分ベクトル
-};
-
-// 半直線
-struct Ray {
-	Vector3 origin;// 始点
-	Vector3 diff;// 終点への差分ベクトル
-};
 
 // 線
 struct Segment
@@ -417,31 +406,29 @@ Vector3 ClosestPoint(const Vector3& point, const Segment& segment)
 };
 
 // 衝突判定
-//bool IsCollision(const Segment& segment, const Plane& plane)
-//{
-//	// 平面の中心点
-//	Vector3 center = Multiply(plane.distance, plane.normal);
-//
-//	float distance = Dot(center, plane.normal);
-//
-//	float k = Dot(plane.normal, sphere.center) - distance;
-//
-//	// 絶対値にする(マイナスだったらプラスにする)
-//	if (k < 0)
-//	{
-//		k *= -1;
-//	}
-//
-//	if (k <= sphere.radius)
-//	{
-//		// 当たっていたらフラグオン
-//		return  true;
-//	}
-//	else
-//	{
-//		return false;
-//	}
-//}
+bool IsCollision(const Segment& segment, const Plane& plane)
+{
+	// まず垂直判定を行うために、法線と線の内積を求める
+	float dot = Dot(plane.normal, segment.diff);
+
+	// 垂直 = 平行であるので、衝突しているはずがない
+	if (dot == 0.0f)
+	{
+		return false;
+	}
+
+	//  t を求める
+	float t = (plane.distance - Dot(segment.origin, plane.normal)) / dot;
+
+	// t の値と線の種類によって衝突しているかを判断する
+	if (t >= 0&&t <= 1)
+	{
+		return true;
+	}
+	else {
+		return false;
+	}
+}
 
 // Gridを表示する
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix)
@@ -601,19 +588,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Vector3 closestPoint = ClosestPoint(point, segment);
 
 		// 当たり判定
-		//if (IsCollision(sphere, plane))
-		//{
-		//	// あたってたら赤色になる
-		//	color = RED;
-		//}
-		//else {
-		//	color = WHITE;
-		//}
+		if (IsCollision(segment, plane))
+		{
+			// あたってたら赤色になる
+			color = RED;
+		}
+		else {
+			color = WHITE;
+		}
 
 		// グリッド
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 		// 平面
-		DrawPlane(plane, worldViewProjectionMatrix, viewportMatrix, color);
+		DrawPlane(plane, worldViewProjectionMatrix, viewportMatrix, WHITE);
 		// 線
 		// 線の始点終点
 		Vector3 start = Transform(Transform(segment.origin, worldViewProjectionMatrix), viewportMatrix);
